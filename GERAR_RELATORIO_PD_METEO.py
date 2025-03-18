@@ -40,7 +40,7 @@ def exibir_pagina_streamlit():
         data_fim = st.date_input('Data de fim:', pd.to_datetime('2025-12-31'))
 
     # Campo para o usuário inserir o caminho da pasta onde os resultados serão salvos
-    pasta_saida = st.text_input(
+    pasta_saida = st.file_uploader(
         'Insira o caminho da pasta onde os resultados serão salvos:', 
         r'C:\Users\Rafael Alvarenga UMI\Desktop\PD_METEO\REPORTES\RELATORIO_MENSAL\RESULTADOS',
         key='input_pasta_saida'
