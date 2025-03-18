@@ -45,8 +45,8 @@ def exibir_pagina_streamlit():
         r'C:\Users\Rafael Alvarenga UMI\Desktop\PD_METEO\REPORTES\RELATORIO_MENSAL\RESULTADOS',
         key='input_pasta_saida'
     )
-    diretorio_atual = os.get_cwd ()
-    st.text (diretorio_atual)
+    cwd = os.getcwd()  # Pega o diretório atual
+    st.write(f"Diretório atual de trabalho: {cwd}")
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
         if pasta_saida:
