@@ -46,6 +46,9 @@ def exibir_pagina_streamlit():
         key='input_pasta_saida'
     )
 
+    cwd = os.getcwd ()
+    st.write (cwd)
+
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
         if pasta_saida:
