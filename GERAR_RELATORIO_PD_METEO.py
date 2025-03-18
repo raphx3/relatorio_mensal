@@ -41,8 +41,7 @@ def exibir_pagina_streamlit():
 
     # Campo para o usuário inserir o caminho da pasta onde os resultados serão salvos
     pasta_saida = st.file_uploader(
-        'Insira o caminho da pasta onde os resultados serão salvos:', 
-        r'C:\Users\Rafael Alvarenga UMI\Desktop\PD_METEO\REPORTES\RELATORIO_MENSAL\RESULTADOS',
+        'Insira o caminho da pasta onde os resultados serão salvos:',
         key='input_pasta_saida'
     )
 
