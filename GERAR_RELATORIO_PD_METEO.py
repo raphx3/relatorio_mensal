@@ -21,22 +21,29 @@ def exibir_pagina_streamlit():
     analista = st.text_input('Nome do Analista:', 'Raphael')  # Nome do analista
     projeto = st.text_input('Nome do Projeto:', 'PD_METEO')  # Nome do projeto
     boia = st.text_input('Nome da Boia:', 'Protótipo 1')  # Nome da boia
-    
+
     # Seleção do parâmetro para teste
     parametro_para_teste = st.selectbox(
         'Selecione o parâmetro para teste:',
         ['CORRENTES', 'METEOROLOGIA', 'MARE', 'ONDAS', 'ONDAS_NAO_DIRECIONAIS']
     )
 
-    # Usando st.columns() para criar colunas lado a lado
-    col1, col2 = st.columns(2)  # Cria duas colunas
+    # Verificar as variáveis de parâmetro
+    if parametro_para_teste == 'CORRENTES':
+        parameter_columns = parameter_columns_correntes
+    elif parametro_para_teste == 'METEOROLOGIA':
+        parameter_columns = parameter_columns_meteo
+    elif parametro_para_teste == 'MARE':
+        parameter_columns = parameter_columns_mare
+    elif parametro_para_teste == 'ONDAS':
+        parameter_columns = parameter_columns_ondas
+    elif parametro_para_teste == 'ONDAS_NAO_DIRECIONAIS':
+        parameter_columns = parameter_columns_ondas_nao_direcionais
+    else:
+        st.error("Parâmetro inválido.")
+        return
 
-    # Campo para o usuário inserir as datas de início e fim lado a lado
-    with col1:
-        data_inicio = st.date_input('Data de início:', pd.to_datetime('2024-01-01'))
-    
-    with col2:
-        data_fim = st.date_input('Data de fim:', pd.to_datetime('2025-12-31'))
+    st.write(f"parameter_columns: {parameter_columns}")  # Debug para verificar os valores de parameter_columns
 
     # Campo para o usuário inserir o caminho da pasta onde os resultados serão salvos
     pasta_saida = st.text_input(
@@ -49,9 +56,11 @@ def exibir_pagina_streamlit():
     cwd = os.getcwd()  # Pega o diretório atual
     st.write(f"Diretório atual de trabalho: {cwd}")
 
-    # Se o caminho fornecido for relativo (não absoluto), converta-o para absoluto
+    # Verifica se o caminho fornecido é absoluto
     if not os.path.isabs(pasta_saida):
+        # Se for relativo, converte para absoluto
         pasta_saida = os.path.join(cwd, pasta_saida)
+        st.write(f"Caminho absoluto gerado: {pasta_saida}")
 
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
@@ -92,7 +101,7 @@ def exibir_pagina_streamlit():
                     time.sleep(0.1)  # Espera 1 segundo a cada incremento
                 
                 # Supondo que você tenha uma função para gerar gráficos
-                plot_series_temporais(df_filtrado_por_tempo, None, parametro_para_teste, os.path.join(pasta_saida, parametro_para_teste))
+                plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste, os.path.join(pasta_saida, parametro_para_teste))
 
                 # Terceira etapa: Gerando o relatório (75% - 100%)
                 progress_text.text("Gerando o relatório...")
@@ -121,6 +130,7 @@ def exibir_pagina_streamlit():
             except Exception as e:
                 st.error(f"Erro ao gerar os resultados: {e}")
                 progress_text.text("Erro durante o processo.")
+
                 
              
                 
