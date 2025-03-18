@@ -52,6 +52,7 @@ def exibir_pagina_streamlit():
             # Verifica se o diretório existe, se não, cria o diretório
             try:
                 os.makedirs(pasta_saida, exist_ok=True)  # Cria o diretório se não existir
+                st.success(f"Pasta criada: {pasta_saida}")
             except Exception as e:
                 st.error(f"Erro ao criar a pasta: {e}")
                 return
