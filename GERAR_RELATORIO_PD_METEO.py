@@ -128,7 +128,7 @@ def exibir_pagina_streamlit():
                 
                 # Finalizando o processo
                 output_file = os.path.join(pasta_saida)
-                st.success(f"Relatório gerado com sucesso em: {output_file}\{parametro_para_teste}")
+                st.success(f"Relatório gerado com sucesso em: {output_file}")
             
             except Exception as e:
                 st.error(f"Erro ao gerar os resultados: {e}")
