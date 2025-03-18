@@ -16,12 +16,11 @@ from OPERACIONAL_UMI_SIMPLIFICADO import *
 
 def exibir_pagina_streamlit():
     st.title('Relatório mensal')
-    
+
     # Campos para o usuário inserir informações de configuração de teste
     analista = st.text_input('Nome do Analista:', 'Raphael')  # Nome do analista
     projeto = st.text_input('Nome do Projeto:', 'PD_METEO')  # Nome do projeto
     boia = st.text_input('Nome da Boia:', 'Protótipo 1')  # Nome da boia
-    #parametro_para_teste = st.text_input('Selecione o parâmetro para teste:')  # Nome da boia
     
     # Seleção do parâmetro para teste
     parametro_para_teste = st.selectbox(
@@ -45,8 +44,15 @@ def exibir_pagina_streamlit():
         r'C:\Users\Rafael Alvarenga UMI\Desktop\PD_METEO\REPORTES\RELATORIO_MENSAL\RESULTADOS',
         key='input_pasta_saida'
     )
+
+    # Obter o diretório de trabalho atual usando os.getcwd()
     cwd = os.getcwd()  # Pega o diretório atual
     st.write(f"Diretório atual de trabalho: {cwd}")
+
+    # Se o caminho fornecido for relativo (não absoluto), converta-o para absoluto
+    if not os.path.isabs(pasta_saida):
+        pasta_saida = os.path.join(cwd, pasta_saida)
+
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
         if pasta_saida:
@@ -69,53 +75,52 @@ def exibir_pagina_streamlit():
                 for i in range(1, 26):  # Vai de 0% até 25%
                     progress_bar.progress(i)
                     time.sleep(0.1)  # Espera 1 segundo a cada incremento                 
-                    
-                if 'CORRENTES' in parametro_para_teste:
-                    parameter_columns=parameter_columns_correntes
-                    #df_correntes,parameter_columns=importar_dados_corrente_string_ADCP(df_PNORC,df_PNORI,df_PNORS,parameter_columns_PNORC,parameter_columns_PNORI,parameter_columns_PNORS,parameter_columns)
-                    #df_correntes= aplicar_filtros(df_correntes,parameter_columns,dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_correntes
-
                 
-                if 'METEOROLOGIA' in parametro_para_teste:
-                    parameter_columns=parameter_columns_meteo
-                    #df_meteo, nomes_colunas = import_df_meteo(input_file_meteo, nomes_colunas=parameter_columns_meteo)
-                    #df_meteo= aplicar_filtros(df_meteo,parameter_columns,dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_meteo
+                # Supondo que você tenha os DataFrames de dados e as variáveis de parâmetros
+                df = pd.DataFrame({
+                    'Data': pd.date_range(data_inicio, data_fim, freq='D'),
+                    'Valor': [i for i in range((data_fim - data_inicio).days + 1)]
+                })
 
-                
-                if 'MARE' in parametro_para_teste:
-                    parameter_columns=parameter_columns_mare
-                    #df_tide,nomes_colunas= import_df_mare(input_file_mare, nomes_colunas=parameter_columns_mare)
-                    #df_tide= aplicar_filtros(df_tide, parameter_columns, dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_tide
-
-                
-                if 'ONDAS' in parametro_para_teste:
-                    parameter_columns=parameter_columns_ondas
-                    #df_ondas = process_wave_data(df_PNORW, df_PNORB, df_PNORI, df_PNORS,parameter_columns_PNORW, parameter_columns_PNORB, parameter_columns_PNORI, parameter_columns_PNORS, parameter_columns_ondas)
-                    #df_ondas= aplicar_filtros(df_ondas,parameter_columns,dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_ondas
-
-                          
-                if 'ONDAS_NAO_DIRECIONAIS' in parametro_para_teste:
-                        parameter_columns=parameter_columns_ondas_nao_direcionais                    
-                        #df_ondas_nao_direcionais = pd.read_csv(input_file_ondas_nao_direcionais,header=1,sep=',',names=parameter_columns_ondas_nao_direcionais)
-                        #df_ondas_nao_direcionais.rename(columns={"TIMESTAMP": "GMT-03:00"}, inplace=True)
-                        #for coluna in df_ondas_nao_direcionais.columns:
-                            #df_ondas_nao_direcionais[f'Flag_{coluna}'] = 0
-                        #df_ondas_nao_direcionais,resultados=aplicar_filtros(df_ondas_nao_direcionais, parameter_columns, dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike, dict_lt_time_and_regressao)
-                        df=df_ondas_nao_direcionais
-                    
-                      
                 # Filtragem dos dados por tempo
                 df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df, data_inicio, data_fim)
-            
+
                 # Segunda etapa: Processando dados (25% - 75%)
                 progress_text.text("Processando dados...")
                 for i in range(26, 76):  # Vai de 25% até 75%
                     progress_bar.progress(i)
                     time.sleep(0.1)  # Espera 1 segundo a cada incremento
+                
+                # Supondo que você tenha uma função para gerar gráficos
+                plot_series_temporais(df_filtrado_por_tempo, None, parametro_para_teste, os.path.join(pasta_saida, parametro_para_teste))
+
+                # Terceira etapa: Gerando o relatório (75% - 100%)
+                progress_text.text("Gerando o relatório...")
+                for i in range(76, 101):  # Vai de 75% até 100%
+                    progress_bar.progress(i)
+                    time.sleep(0.1)  # Espera 1 segundo a cada incremento
+
+                progress_text.text("Processo finalizado.")
+
+                # Finalizando o processo
+                output_file = os.path.join(pasta_saida, f'relatorio_{parametro_para_teste}.csv')
+
+                # Salvar o DataFrame como CSV
+                df.to_csv(output_file, index=False)
+                st.success(f"Relatório gerado com sucesso em: {output_file}")
+
+                # Adicionando botão para download do arquivo gerado
+                with open(output_file, "rb") as file:
+                    st.download_button(
+                        label="Baixar Relatório",
+                        data=file,
+                        file_name=f"relatorio_{parametro_para_teste}.csv",
+                        mime="text/csv"
+                    )
+            
+            except Exception as e:
+                st.error(f"Erro ao gerar os resultados: {e}")
+                progress_text.text("Erro durante o processo.")
                 
              
                 
