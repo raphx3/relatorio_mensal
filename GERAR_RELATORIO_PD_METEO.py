@@ -18,7 +18,7 @@ def exibir_pagina_streamlit():
     st.title('Relatório mensal')
     
     # Campos para o usuário inserir informações de configuração de teste
-    analista = st.text_input('Nome do Analista:', 'Raphael')  # Nome do analista
+    analista = st.text_input('Nome do Analista:', '')  # Nome do analista
     projeto = st.text_input('Nome do Projeto:', 'PD_METEO')  # Nome do projeto
     boia = st.text_input('Nome da Boia:', 'Protótipo 1')  # Nome da boia
     #parametro_para_teste = st.text_input('Selecione o parâmetro para teste:')  # Nome da boia
@@ -40,7 +40,7 @@ def exibir_pagina_streamlit():
         data_fim = st.date_input('Data de fim:', pd.to_datetime('2025-12-31'))
 
     # Campo para o usuário inserir o caminho da pasta onde os resultados serão salvos
-    pasta_saida = st.file_uploader(
+    pasta_saida = st.download_button(
         'Insira o caminho da pasta onde os resultados serão salvos:',
         key='input_pasta_saida'
     )
