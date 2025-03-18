@@ -48,6 +48,7 @@ def exibir_pagina_streamlit():
 
     cwd = os.getcwd ()
     st.write (cwd)
+    os.chdir (pasta_saida)
 
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
@@ -59,6 +60,8 @@ def exibir_pagina_streamlit():
             except Exception as e:
                 st.error(f"Erro ao criar a pasta: {e}")
                 return
+                
+
 
             # Exibir a barra de progresso
             progress_bar = st.progress(0)
