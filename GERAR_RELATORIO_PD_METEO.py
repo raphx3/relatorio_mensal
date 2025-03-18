@@ -48,6 +48,7 @@ def exibir_pagina_streamlit():
 
     try:
         cwd = os.getcwd ()
+        cwd = od.path.join (cwd)
         st.write (cwd)
         os.chdir (pasta_saida)
     except:
