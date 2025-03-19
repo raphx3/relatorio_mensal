@@ -49,8 +49,10 @@ def exibir_pagina_streamlit():
     try:
         cwd = os.getcwd ()
         cwd = os.path.join (cwd)
-        st.write (cwd)
+        st.write (f"Antigo diretório base: {cwd}")
         os.chdir (pasta_saida)
+        cwd = os.getcwd ()
+        st.write (f"Novo diretório base: {cwd}")
     
     except:
        st.error(f"Erro ao trocar para diretório do computador: {pasta_saida}") 
