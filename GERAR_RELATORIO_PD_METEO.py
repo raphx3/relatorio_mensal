@@ -50,7 +50,8 @@ def exibir_pagina_streamlit():
         cwd = os.getcwd()
         st.write(f"Antigo diretório base: {cwd}")
         
-        # Certifique-se de que o diretório fornecido é válido
+        # Aqui evitamos que o caminho seja concatenado incorretamente.
+        # Apenas mudamos para o diretório indicado em pasta_saida, sem interferir com o cwd
         if os.path.isdir(pasta_saida):
             os.chdir(pasta_saida)
             cwd = os.getcwd()
