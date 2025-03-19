@@ -96,7 +96,7 @@ def exibir_pagina_streamlit():
                     
                       
                 # Filtragem dos dados por tempo
-                zip_buffer = df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df, data_inicio, data_fim)
+                df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df, data_inicio, data_fim)
             
                 # Segunda etapa: Processando dados (25% - 75%)
                 progress_text.text("Processando dados...")
@@ -106,7 +106,7 @@ def exibir_pagina_streamlit():
                 
              
                 
-                plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
+               zip_buffer =  plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
             
                 # Terceira etapa: Gerando o relatório (75% - 100%)
                 progress_text.text("Gerando o relatório...")
