@@ -11,6 +11,7 @@ import time
 from QC_FLAGS_UMISAN import *
 from OPERACIONAL_UMI_SIMPLIFICADO import *
 import io
+import zipfile
 
 #%% FRONT END STREAMLIT
 
@@ -246,7 +247,7 @@ func_names = [
 
 
 
-def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste, pasta_saida):  
+def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste):  
     agora = dtt.datetime.now()
     agora = agora.strftime('%Y/%m/%d %H:%M:%S')
     
@@ -266,65 +267,76 @@ def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste, 
         ymin_speed = df_speed.max().max() * -0.1
         ymax_speed = df_speed.max().max() * 1.1
     
-    for param in parameter_columns:
-        flag_column = f'Flag_{param}'    
+    # Criar um arquivo ZIP em memória
+    zip_buffer = io.BytesIO()
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
         
-        if flag_column in df_filtrado.columns:
-            plt.figure(figsize=(12, 6))
-            plt.gca().set_facecolor('white')
-
-            # Separar os dados por flag
-            df_preenchido = df_filtrado.copy()
-            df_preenchido = df_preenchido.fillna(df_preenchido.mean())
-            df_flag_0 = df_preenchido[df_preenchido[flag_column] != 4]
-            df_flag_4 = df_preenchido[df_preenchido[flag_column] == 4]
+        for param in parameter_columns:
+            flag_column = f'Flag_{param}'    
             
-            df_nan = df_filtrado[df_filtrado[param].isna()]
-            df_nan = df_nan.fillna(df_filtrado.mean())
+            if flag_column in df_filtrado.columns:
+                plt.figure(figsize=(12, 6))
+                plt.gca().set_facecolor('white')
 
-            count_flag_0 = len(df_flag_0)
-            count_flag_4 = len(df_flag_4)
-            porcentagem_flag_0 = round((count_flag_0 / len(df_filtrado)) * 100, 2)
-            porcentagem_flag_4 = round((count_flag_4 / len(df_filtrado)) * 100, 2)
-            
-            plt.plot(df_filtrado['GMT-03:00'], df_filtrado[param], label=f'Série Completa: Flag 0 ({porcentagem_flag_0}%)', alpha=0.7, color='black', linestyle='-', linewidth=1, zorder=1)
-            plt.scatter(df_flag_4['GMT-03:00'], df_flag_4[param], color='red', alpha=1, s=15, label=f'Flag 4 ({porcentagem_flag_4}%)', zorder=2)
-            plt.plot(df_nan['GMT-03:00'], df_nan[param], alpha=0.8, color='black', linestyle='dotted', linewidth=1, label = 'Valores nulos', zorder=3)
+                # Separar os dados por flag
+                df_preenchido = df_filtrado.copy()
+                df_preenchido = df_preenchido.fillna(df_preenchido.mean())
+                df_flag_0 = df_preenchido[df_preenchido[flag_column] != 4]
+                df_flag_4 = df_preenchido[df_preenchido[flag_column] == 4]
+                
+                df_nan = df_filtrado[df_filtrado[param].isna()]
+                df_nan = df_nan.fillna(df_filtrado.mean())
 
-            data_inicio = str(df_filtrado['GMT-03:00'].iloc[0])
-            data_fim = str(df_filtrado['GMT-03:00'].iloc[-1])
-            
-            plt.title(f'Série Temporal: {parametro_para_teste} - {param} - execução do reporte: {agora}\nPeríodo de análise: {data_inicio} - {data_fim}')
-            plt.xlabel('Tempo (Data/Hora)')
-            
-            # Ajustar o eixo Y
-            if param in amplitude_cols:
-                plt.ylim(ymin_amplitude, ymax_amplitude)
-            elif param in speed_cols:
-                plt.ylim(ymin_speed, ymax_speed)
-            
-            plt.legend(loc='upper right')
-            plt.grid(True, linestyle='dotted', alpha=0.5)
+                count_flag_0 = len(df_flag_0)
+                count_flag_4 = len(df_flag_4)
+                porcentagem_flag_0 = round((count_flag_0 / len(df_filtrado)) * 100, 2)
+                porcentagem_flag_4 = round((count_flag_4 / len(df_filtrado)) * 100, 2)
+                
+                plt.plot(df_filtrado['GMT-03:00'], df_filtrado[param], label=f'Série Completa: Flag 0 ({porcentagem_flag_0}%)', alpha=0.7, color='black', linestyle='-', linewidth=1, zorder=1)
+                plt.scatter(df_flag_4['GMT-03:00'], df_flag_4[param], color='red', alpha=1, s=15, label=f'Flag 4 ({porcentagem_flag_4}%)', zorder=2)
+                plt.plot(df_nan['GMT-03:00'], df_nan[param], alpha=0.8, color='black', linestyle='dotted', linewidth=1, label = 'Valores nulos', zorder=3)
 
-            # Criar o gráfico em um objeto de memória
-            img_bytes = io.BytesIO()
-            plt.savefig(img_bytes, format='png')
-            img_bytes.seek(0)  # Resetar o ponteiro do arquivo para o início
+                data_inicio = str(df_filtrado['GMT-03:00'].iloc[0])
+                data_fim = str(df_filtrado['GMT-03:00'].iloc[-1])
+                
+                plt.title(f'Série Temporal: {parametro_para_teste} - {param} - execução do reporte: {agora}\nPeríodo de análise: {data_inicio} - {data_fim}')
+                plt.xlabel('Tempo (Data/Hora)')
 
-            # Criar um nome de arquivo seguro
-            safe_param_name = param.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '')
-            safe_initial_date_name = data_inicio.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
-            safe_final_date_name = data_fim.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
+                # Ajustar o eixo Y
+                if param in amplitude_cols:
+                    plt.ylim(ymin_amplitude, ymax_amplitude)
+                elif param in speed_cols:
+                    plt.ylim(ymin_speed, ymax_speed)
+                
+                plt.legend(loc='upper right')
+                plt.grid(True, linestyle='dotted', alpha=0.5)
 
-            # Usar o Streamlit para criar o botão de download
-            st.download_button(
-                label=f'Download do Gráfico {param}',
-                data=img_bytes,
-                file_name=f'{parametro_para_teste} - Flag_{safe_param_name} - {safe_initial_date_name} - {safe_final_date_name}.png',
-                mime="image/png"
-            )
-            plt.close()
-            
+                # Salvar o gráfico em um objeto de memória
+                img_bytes = io.BytesIO()
+                plt.savefig(img_bytes, format='png')
+                img_bytes.seek(0)  # Resetar o ponteiro do arquivo para o início
+
+                # Adicionar o gráfico ao arquivo ZIP com um nome único
+                safe_param_name = param.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '')
+                safe_initial_date_name = data_inicio.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
+                safe_final_date_name = data_fim.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
+
+                file_name = f'{parametro_para_teste} - Flag_{safe_param_name} - {safe_initial_date_name} - {safe_final_date_name}.png'
+                zip_file.writestr(file_name, img_bytes.read())
+
+                plt.close()
+
+    # Rewind the ZIP buffer to the beginning before sending it to the user
+    zip_buffer.seek(0)
+    
+    # Criar o botão para download do arquivo ZIP
+    st.download_button(
+        label="Baixar todos os gráficos",
+        data=zip_buffer,
+        file_name="graficos_temporais.zip",
+        mime="application/zip"
+    )
+
     print("\nREPORTE EM GRÁFICOS FINALIZADO.")
 
 #%% Executando a função para exibir a página no Streamlit
