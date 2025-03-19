@@ -43,7 +43,7 @@ def exibir_pagina_streamlit():
 
  
     # Botão para gerar os resultados e salvar na pasta
-    if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
+    if st.button(label='Gerar Resultados'):
         
             # Exibir a barra de progresso
             progress_bar = st.progress(0)
@@ -236,7 +236,7 @@ func_names = [
 
 
 #%% plot_series_temporais
-def plot_series_temporais (df_filtrado, parameter_columns, parametro_para_teste, pasta_saida):  
+def plot_series_temporais (df_filtrado, parameter_columns, parametro_para_teste):  
     
     agora = dtt.datetime.now()
     agora = agora.strftime ('%Y/%m/%d %H:%M:%S')
