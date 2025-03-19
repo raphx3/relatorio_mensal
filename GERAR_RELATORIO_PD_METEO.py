@@ -96,7 +96,7 @@ def exibir_pagina_streamlit():
                     
                       
                 # Filtragem dos dados por tempo
-                df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df, data_inicio, data_fim)
+                zip_buffer = df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df, data_inicio, data_fim)
             
                 # Segunda etapa: Processando dados (25% - 75%)
                 progress_text.text("Processando dados...")
