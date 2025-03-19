@@ -10,6 +10,7 @@ import time
 #from QC_OPERACIONAL_UMISAN_VER09_REVRA import * # é de onde vem a variavel df 
 from QC_FLAGS_UMISAN import *
 from OPERACIONAL_UMI_SIMPLIFICADO import *
+import io
 
 #%% FRONT END STREAMLIT
 
