@@ -14,6 +14,11 @@ from OPERACIONAL_UMI_SIMPLIFICADO import *
 #%% FRONT END STREAMLIT
 
 
+import os
+import streamlit as st
+import pandas as pd
+import time
+
 def exibir_pagina_streamlit():
     st.title('Relatório mensal')
     
@@ -21,25 +26,19 @@ def exibir_pagina_streamlit():
     analista = st.text_input('Nome do Analista:', 'Raphael')  # Nome do analista
     projeto = st.text_input('Nome do Projeto:', 'PD_METEO')  # Nome do projeto
     boia = st.text_input('Nome da Boia:', 'Protótipo 1')  # Nome da boia
-    #parametro_para_teste = st.text_input('Selecione o parâmetro para teste:')  # Nome da boia
     
-    # Seleção do parâmetro para teste
     parametro_para_teste = st.selectbox(
         'Selecione o parâmetro para teste:',
         ['CORRENTES', 'METEOROLOGIA', 'MARE', 'ONDAS', 'ONDAS_NAO_DIRECIONAIS']
     )
 
-    # Usando st.columns() para criar colunas lado a lado
-    col1, col2 = st.columns(2)  # Cria duas colunas
-
-    # Campo para o usuário inserir as datas de início e fim lado a lado
+    col1, col2 = st.columns(2)
     with col1:
         data_inicio = st.date_input('Data de início:', pd.to_datetime('2024-01-01'))
     
     with col2:
         data_fim = st.date_input('Data de fim:', pd.to_datetime('2025-12-31'))
 
-    # Campo para o usuário inserir o caminho da pasta onde os resultados serão salvos
     pasta_saida = st.text_input(
         'Insira o caminho da pasta onde os resultados serão salvos:', 
         r'C:\Users\Rafael Alvarenga UMI\Desktop\PD_METEO\REPORTES\RELATORIO_MENSAL\RESULTADOS',
@@ -51,12 +50,13 @@ def exibir_pagina_streamlit():
         cwd = os.getcwd()
         st.write(f"Antigo diretório base: {cwd}")
         
-        # Tente mudar para o diretório fornecido
-        os.chdir(pasta_saida)
-        
-        # Verifique o novo diretório
-        cwd = os.getcwd()
-        st.write(f"Novo diretório base: {cwd}")
+        # Certifique-se de que o diretório fornecido é válido
+        if os.path.isdir(pasta_saida):
+            os.chdir(pasta_saida)
+            cwd = os.getcwd()
+            st.write(f"Novo diretório base: {cwd}")
+        else:
+            st.error(f"Diretório {pasta_saida} não encontrado.")
     
     except Exception as e:
         st.error(f"Erro ao trocar para diretório do computador: {e}")
@@ -71,8 +71,6 @@ def exibir_pagina_streamlit():
             except Exception as e:
                 st.error(f"Erro ao criar a pasta: {e}")
                 return
-                
-
 
             # Exibir a barra de progresso
             progress_bar = st.progress(0)
@@ -85,58 +83,40 @@ def exibir_pagina_streamlit():
                 for i in range(1, 26):  # Vai de 0% até 25%
                     progress_bar.progress(i)
                     time.sleep(0.1)  # Espera 1 segundo a cada incremento                 
-                    
+
+                # Filtragem do parâmetro selecionado
                 if 'CORRENTES' in parametro_para_teste:
-                    parameter_columns=parameter_columns_correntes
-                    #df_correntes,parameter_columns=importar_dados_corrente_string_ADCP(df_PNORC,df_PNORI,df_PNORS,parameter_columns_PNORC,parameter_columns_PNORI,parameter_columns_PNORS,parameter_columns)
-                    #df_correntes= aplicar_filtros(df_correntes,parameter_columns,dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_correntes
+                    # Aqui deve vir a lógica para tratar os dados de correntes
+                    df = df_correntes  # Exemplo de atribuição
 
-                
                 if 'METEOROLOGIA' in parametro_para_teste:
-                    parameter_columns=parameter_columns_meteo
-                    #df_meteo, nomes_colunas = import_df_meteo(input_file_meteo, nomes_colunas=parameter_columns_meteo)
-                    #df_meteo= aplicar_filtros(df_meteo,parameter_columns,dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_meteo
+                    # Aqui deve vir a lógica para tratar os dados de meteorologia
+                    df = df_meteo  # Exemplo de atribuição
 
-                
                 if 'MARE' in parametro_para_teste:
-                    parameter_columns=parameter_columns_mare
-                    #df_tide,nomes_colunas= import_df_mare(input_file_mare, nomes_colunas=parameter_columns_mare)
-                    #df_tide= aplicar_filtros(df_tide, parameter_columns, dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_tide
+                    # Aqui deve vir a lógica para tratar os dados de maré
+                    df = df_tide  # Exemplo de atribuição
 
-                
                 if 'ONDAS' in parametro_para_teste:
-                    parameter_columns=parameter_columns_ondas
-                    #df_ondas = process_wave_data(df_PNORW, df_PNORB, df_PNORI, df_PNORS,parameter_columns_PNORW, parameter_columns_PNORB, parameter_columns_PNORI, parameter_columns_PNORS, parameter_columns_ondas)
-                    #df_ondas= aplicar_filtros(df_ondas,parameter_columns,dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike,dict_lt_time_and_regressao)
-                    df=df_ondas
+                    # Aqui deve vir a lógica para tratar os dados de ondas
+                    df = df_ondas  # Exemplo de atribuição
 
-                          
                 if 'ONDAS_NAO_DIRECIONAIS' in parametro_para_teste:
-                        parameter_columns=parameter_columns_ondas_nao_direcionais                    
-                        #df_ondas_nao_direcionais = pd.read_csv(input_file_ondas_nao_direcionais,header=1,sep=',',names=parameter_columns_ondas_nao_direcionais)
-                        #df_ondas_nao_direcionais.rename(columns={"TIMESTAMP": "GMT-03:00"}, inplace=True)
-                        #for coluna in df_ondas_nao_direcionais.columns:
-                            #df_ondas_nao_direcionais[f'Flag_{coluna}'] = 0
-                        #df_ondas_nao_direcionais,resultados=aplicar_filtros(df_ondas_nao_direcionais, parameter_columns, dict_offset, limites_range_check, dict_max_min_test, st_time_series_dict, limite_repeticao_dados, limite_sigma_aceitavel_and_dict_delta_site, sampling_frequency, coluna_tempo, alert_window_size, dict_spike, dict_lt_time_and_regressao)
-                        df=df_ondas_nao_direcionais
-                    
-                      
+                    # Aqui deve vir a lógica para tratar os dados de ondas não direcionais
+                    df = df_ondas_nao_direcionais  # Exemplo de atribuição
+
                 # Filtragem dos dados por tempo
                 df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df, data_inicio, data_fim)
-            
+
                 # Segunda etapa: Processando dados (25% - 75%)
                 progress_text.text("Processando dados...")
                 for i in range(26, 76):  # Vai de 25% até 75%
                     progress_bar.progress(i)
                     time.sleep(0.1)  # Espera 1 segundo a cada incremento
                 
-             
-                
+                # Gerando os resultados
                 plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste, os.path.join(pasta_saida, parametro_para_teste))
-            
+                
                 # Terceira etapa: Gerando o relatório (75% - 100%)
                 progress_text.text("Gerando o relatório...")
                 for i in range(76, 101):  # Vai de 75% até 100%
@@ -146,11 +126,12 @@ def exibir_pagina_streamlit():
                 
                 # Finalizando o processo
                 output_file = os.path.join(pasta_saida)
-                st.success(f"Relatório gerado com sucesso em: {output_file}\{parametro_para_teste}")
+                st.success(f"Relatório gerado com sucesso em: {output_file}\\{parametro_para_teste}")
             
             except Exception as e:
                 st.error(f"Erro ao gerar os resultados: {e}")
                 progress_text.text("Erro durante o processo.")
+
 
 
 
