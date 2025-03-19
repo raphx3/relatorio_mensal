@@ -10,6 +10,8 @@ import time
 #from QC_OPERACIONAL_UMISAN_VER09_REVRA import * # é de onde vem a variavel df 
 from QC_FLAGS_UMISAN import *
 from OPERACIONAL_UMI_SIMPLIFICADO import *
+import io
+import zipfile
 
 #%% FRONT END STREAMLIT
 
@@ -39,13 +41,7 @@ def exibir_pagina_streamlit():
     with col2:
         data_fim = st.date_input('Data de fim:', pd.to_datetime('2025-12-31'))
 
-    # Campo para o usuário inserir o caminho da pasta onde os resultados serão salvos
-    pasta_saida = st.text_input(
-        'Insira o caminho da pasta onde os resultados serão salvos:', 
-        r'C:\Users\Rafael Alvarenga UMI\Desktop\PD_METEO\REPORTES\RELATORIO_MENSAL\RESULTADOS',
-        key='input_pasta_saida'
-    )
-
+ 
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
         
@@ -110,7 +106,7 @@ def exibir_pagina_streamlit():
                 
              
                 
-                plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste, os.path.join(pasta_saida, parametro_para_teste))
+                plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
             
                 # Terceira etapa: Gerando o relatório (75% - 100%)
                 progress_text.text("Gerando o relatório...")
