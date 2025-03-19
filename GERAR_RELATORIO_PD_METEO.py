@@ -116,7 +116,13 @@ def exibir_pagina_streamlit():
                 progress_text.text("Processo finalizado.")
                 
                 # Finalizando o processo
-                st.success(f"Resultados para {parametro_para_teste} gerados com sucesso! gerado com sucesso em para")
+                st.success(f"Resultados para o parametro {parametro_para_teste} gerado com sucesso! ")
+                st.download_button(label="Baixar resultados", 
+                                   data=zip_buffer, 
+                                   file_name=f"resultados_{parametro_para_teste}.zip", 
+                                   mime="application/zip")
+            
+            
             
             except Exception as e:
                 st.error(f"Erro ao gerar os resultados: {e}")
@@ -523,14 +529,14 @@ def plot_series_temporais (df_filtrado, parameter_columns, parametro_para_teste)
     
     # Criar o botão para download do arquivo ZIP
     st.download_button(
-        label="Baixar todos os gráficos",
+        label="Baixar resultados",
         data=zip_buffer,
         file_name=f"resultados_{parametro_para_teste}.zip",
         mime="application/zip"
     )
 
     print("\nREPORTE EM GRÁFICOS FINALIZADO.")
-
+    return zip_buffer ()
 #%% Executando a função para exibir a página no Streamlit
 
 
