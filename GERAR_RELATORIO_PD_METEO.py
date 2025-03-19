@@ -1,161 +1,145 @@
-# %% Módulos
-import os
 import pandas as pd
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 import datetime as dtt
-import streamlit as st
-import time
-import io
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-from QC_FLAGS_UMISAN import *
-from OPERACIONAL_UMI_SIMPLIFICADO import *
+import os
 
-# %% FUNÇÕES DE GERAÇÃO DE GRÁFICOS
-
-def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste):
-    agora = dtt.datetime.now()
-    agora = agora.strftime('%Y/%m/%d %H:%M:%S')
-
-    # Encontrar as colunas que possuem "Amplitude" no nome (excluindo "Flag_")
+# Função para processar colunas e extrair dados numéricos
+def processar_colunas_amplitude_speed(df_filtrado):
     amplitude_cols = [col for col in df_filtrado.columns if "Amplitude" in col and "Flag_" not in col  and "GMT-03:00" not in col]
     speed_cols = [col for col in df_filtrado.columns if "Speed" in col and "Flag_" not in col  and "GMT-03:00" not in col]
     
-    # Garantir que as colunas de "Amplitude" sejam numéricas, descartando valores não numéricos
-    df_amplitude = df_filtrado[amplitude_cols].apply(pd.to_numeric, errors='coerce')
-    df_speed = df_filtrado[speed_cols].apply(pd.to_numeric, errors='coerce')
-    
-    # Calcular os limites globais do eixo Y com base nas colunas "Amplitude"
+    df_amplitude = df_filtrado[amplitude_cols].apply(pd.to_numeric, errors='coerce')  
+    df_speed = df_filtrado[speed_cols].apply(pd.to_numeric, errors='coerce')  
+
+    return df_amplitude, df_speed, amplitude_cols, speed_cols
+
+# Função para calcular limites do gráfico
+def calcular_limites(df_amplitude, df_speed):
     if not df_amplitude.empty:
-        ymin_amplitude = df_amplitude.min().min()*0.7
-        ymax_amplitude = df_amplitude.max().max()*1.3
-    
+        ymin_amplitude = df_amplitude.min().min() * 0.7
+        ymax_amplitude = df_amplitude.max().max() * 1.3
+    else:
+        ymin_amplitude, ymax_amplitude = None, None
+
     if not df_speed.empty:
-        ymin_speed = df_speed.max().max()*-0.1
-        ymax_speed = df_speed.max().max()*1.1
+        ymin_speed = df_speed.max().max() * -0.1
+        ymax_speed = df_speed.max().max() * 1.1
+    else:
+        ymin_speed, ymax_speed = None, None
+
+    return ymin_amplitude, ymax_amplitude, ymin_speed, ymax_speed
+
+# Função para configurar os rótulos do eixo Y de acordo com o parâmetro
+def configurar_rotulos(param):
+    rotulos = {
+        "Amplitude": "Amplitude (m)",
+        "Speed": "Velocidade (m/s)",
+        "Direction": "Direção (°)",
+        "Roll": "Direção (°)",
+        "Heading": "Direção (°)",
+        "Pitch": "Direção (°)",
+        "Temperature": "Temperatura (°C)",
+        "Pressure": "Pressão (dbar)",
+        "Battery": "Tensão (Volts)",
+        "Rain": "Altura (mm)",
+        "Wind Direction(*)": "Direção (°)",
+        "Gust Speed(m/s)": "Velocidade (m/s)",
+        "Wind Speed(m/s)": "Velocidade (m/s)",
+        "Dew Point": "Temperatura (°C)",
+        "RH(%)": "Umidade (%)",
+        "Tide_Level": "Altura (m)",
+        "Sensor_Velki": "Altura (m)",
+        "CutOff_Freq_High": "Frequência (n/s)",
+        "Peak_Period": "Período (s)",
+        "Max_Height": "Altura (m)",
+        "Sign_Height": "Altura (m)"
+    }
+
+    for chave in rotulos:
+        if chave in param:
+            return rotulos[chave]
+    return "Valor"
+
+# Função para garantir que o eixo X tenha 5 ticks igualmente espaçados
+def configurar_ticks_x(df_filtrado):
+    time_min = df_filtrado['GMT-03:00'].min()
+    time_max = df_filtrado['GMT-03:00'].max()
+    time_min_timestamp = time_min.timestamp()
+    time_max_timestamp = time_max.timestamp()
+
+    xticks_positions_timestamp = np.linspace(time_min_timestamp, time_max_timestamp, 5)
+    xticks_positions = [pd.to_datetime(ts, unit='s') for ts in xticks_positions_timestamp]
+
+    return xticks_positions
+
+#%% plot_series_temporais
+def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste, pasta_saida):  
+    agora = dtt.datetime.now()
+    agora = agora.strftime('%Y/%m/%d %H:%M:%S')
     
-    # Criar gráfico em memória
-    fig, ax = plt.subplots(figsize=(12, 6))
-    
+    df_amplitude, df_speed, amplitude_cols, speed_cols = processar_colunas_amplitude_speed(df_filtrado)
+    ymin_amplitude, ymax_amplitude, ymin_speed, ymax_speed = calcular_limites(df_amplitude, df_speed)
+
     for param in parameter_columns:
         flag_column = f'Flag_{param}'
         
         if flag_column in df_filtrado.columns:
-            df_preenchido = df_filtrado.fillna(df_filtrado.mean())
+            plt.figure(figsize=(12, 6))
+            plt.gca().set_facecolor('white')
+
+            df_preenchido = df_filtrado.copy()
+            df_preenchido = df_preenchido.fillna(df_preenchido.mean())
             df_flag_0 = df_preenchido[df_preenchido[flag_column] != 4]
             df_flag_4 = df_preenchido[df_preenchido[flag_column] == 4]
-            df_nan = df_filtrado[df_filtrado[param].isna()].fillna(df_filtrado.mean())
             
-            # Plotar série completa
-            ax.plot(df_filtrado['GMT-03:00'], df_filtrado[param], label=f'Série Completa', alpha=0.7, color='black', linestyle='-', linewidth=1)
+            df_nan = df_filtrado[df_filtrado[param].isna()]
+            df_nan = df_nan.fillna(df_filtrado.mean())
             
-            # Plotar dados com Flag 4 (vermelho) como pontos
-            ax.scatter(df_flag_4['GMT-03:00'], df_flag_4[param], color='red', alpha=1, s=15, label=f'Flag 4')
+            count_flag_0 = len(df_flag_0)
+            count_flag_4 = len(df_flag_4)
+            porcentagem_flag_0 = round((count_flag_0 / len(df_filtrado)) * 100, 2)
+            porcentagem_flag_4 = round((count_flag_4 / len(df_filtrado)) * 100, 2)
             
-            # Plotar os nan como a média da série temporal
-            ax.plot(df_nan['GMT-03:00'], df_nan[param], alpha=0.8, color='black', linestyle='dotted', linewidth=1, label='Valores nulos')
+            plt.plot(df_filtrado['GMT-03:00'], df_filtrado[param], label=f'Série Completa: Flag 0 ({porcentagem_flag_0}%)', alpha=0.7, color='black', linestyle='-', linewidth=1, zorder=1)
+            plt.scatter(df_flag_4['GMT-03:00'], df_flag_4[param], color='red', alpha=1, s=15, label=f'Flag 4 ({porcentagem_flag_4}%)', zorder=2)
+            plt.plot(df_nan['GMT-03:00'], df_nan[param], alpha=0.8, color='black', linestyle='dotted', linewidth=1, label='Valores nulos', zorder=3)
+            
+            data_inicio = str(df_filtrado['GMT-03:00'].iloc[0])
+            data_fim = str(df_filtrado['GMT-03:00'].iloc[-1])
+            
+            plt.title(f'Série Temporal: {parametro_para_teste} - {param} - execução do reporte: {agora}\nPeríodo de análise: {data_inicio} - {data_fim}')
+            plt.xlabel('Tempo (Data/Hora)')
+            plt.ylabel(configurar_rotulos(param))
+            
+            xticks_positions = configurar_ticks_x(df_filtrado)
+            plt.xticks(xticks_positions, rotation=0)
 
-            ax.set_title(f'Série Temporal: {parametro_para_teste} - {param} - execução do reporte: {agora}')
-            ax.set_xlabel('Tempo (Data/Hora)')
-            
-            # Ajustar o eixo Y conforme o tipo de dado
             if param in amplitude_cols:
-                ax.set_ylabel('Amplitude (m)')
-                ax.set_ylim(ymin_amplitude, ymax_amplitude)
-            if param in speed_cols:
-                ax.set_ylabel('Velocidade (m/s)')
-                ax.set_ylim(ymin_speed, ymax_speed)
-            # Outros casos de parâmetros podem ser adicionados aqui
+                plt.ylim(ymin_amplitude, ymax_amplitude)
+                plt.yticks(np.linspace(ymin_amplitude, ymax_amplitude, 6))  # Garantir 5 ticks
+            elif param in speed_cols:
+                plt.ylim(ymin_speed, ymax_speed)
+                plt.yticks(np.linspace(ymin_speed, ymax_speed, 6))  # Garantir 5 ticks
 
-            ax.grid(True, linestyle='dotted', alpha=0.5)
-            ax.legend(loc='upper right')
+            plt.legend(loc='upper right')
+            plt.grid(True, linestyle='dotted', alpha=0.5)
 
-    # Gerar o gráfico em um buffer de memória
-    buf = io.BytesIO()
-    FigureCanvas(fig).print_png(buf)
-    buf.seek(0)  # Voltar ao início do arquivo para o download
+            os.makedirs(pasta_saida, exist_ok=True)
 
-    return buf
+            safe_param_name = param.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '')
+            safe_initial_date_name = data_inicio.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
+            safe_final_date_name = data_fim.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
 
-# %% FUNÇÃO PRINCIPAL STREAMLIT
+            plt.savefig(os.path.join(pasta_saida, f'{parametro_para_teste} - Flag_{safe_param_name} - {safe_initial_date_name} - {safe_final_date_name}.png'))
+            plt.close()
 
-def exibir_pagina_streamlit():
-    st.title('Relatório mensal')
-    
-    # Campos para o usuário inserir informações de configuração de teste
-    analista = st.text_input('Nome do Analista:', 'Raphael')  # Nome do analista
-    projeto = st.text_input('Nome do Projeto:', 'PD_METEO')  # Nome do projeto
-    boia = st.text_input('Nome da Boia:', 'Protótipo 1')  # Nome da boia
-    
-    # Seleção do parâmetro para teste
-    parametro_para_teste = st.selectbox(
-        'Selecione o parâmetro para teste:',
-        ['CORRENTES', 'METEOROLOGIA', 'MARE', 'ONDAS', 'ONDAS_NAO_DIRECIONAIS']
-    )
+    print("\nREPORTE EM GRÁFICOS FINALIZADO.")
 
-    # Usando st.columns() para criar colunas lado a lado
-    col1, col2 = st.columns(2)  # Cria duas colunas
-
-    # Campo para o usuário inserir as datas de início e fim lado a lado
-    with col1:
-        data_inicio = st.date_input('Data de início:', pd.to_datetime('2024-01-01'))
-    
-    with col2:
-        data_fim = st.date_input('Data de fim:', pd.to_datetime('2025-12-31'))
-
-    # Campos de seleção de parâmetros
-    if parametro_para_teste == 'CORRENTES':
-        parameter_columns = parameter_columns_correntes
-    elif parametro_para_teste == 'METEOROLOGIA':
-        parameter_columns = parameter_columns_meteo
-    elif parametro_para_teste == 'MARE':
-        parameter_columns = parameter_columns_mare
-    elif parametro_para_teste == 'ONDAS':
-        parameter_columns = parameter_columns_ondas
-    elif parametro_para_teste == 'ONDAS_NAO_DIRECIONAIS':
-        parameter_columns = parameter_columns_ondas_nao_direcionais
-    
-    # Botão para gerar os resultados e salvar na pasta
-    if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
-        try:
-            # Exemplo de dados (substitua com os seus dados reais)
-            df_filtrado_por_tempo = pd.DataFrame({
-                'GMT-03:00': pd.date_range(start='2023-01-01', periods=100, freq='D'),
-                'Amplitude_S1': np.random.rand(100) * 10,
-                'Speed_S1': np.random.rand(100) * 20,
-                'Flag_Amplitude_S1': np.random.choice([0, 4], size=100),
-                'Flag_Speed_S1': np.random.choice([0, 4], size=100),
-            })
-            
-            # Filtrando dados por período
-            df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df_filtrado_por_tempo, data_inicio, data_fim)
-            
-            # Gerar o gráfico na memória
-            buf = plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
-            
-            # Exibir o botão de download
-            st.download_button(
-                label="Baixar Gráfico",
-                data=buf,
-                file_name="grafico_serie_temporal.png",
-                mime="image/png"
-            )
-            st.success("Relatório gerado com sucesso!")
-        
-        except Exception as e:
-            st.error(f"Erro ao gerar os resultados: {e}")
-
-# %% FILTRO DE PERÍODO
-
-def filtrar_por_periodo(df, data_inicio, data_fim):
-    # Filtro
-    data_inicio = pd.to_datetime(data_inicio)
-    data_fim = pd.to_datetime(data_fim)
-    df_filtrado_por_tempo = df[(df['GMT-03:00'] >= data_inicio) & (df['GMT-03:00'] <= data_fim)]
-    
-    return df_filtrado_por_tempo, data_inicio.strftime("%Y-%m-%d %H:%M:%S"), data_fim.strftime("%Y-%m-%d %H:%M:%S")
-
-# %% EXECUÇÃO DO STREAMLIT
-
-if __name__ == "__main__":
+#%% Executando a função para exibir a página no Streamlit
+def main():
     exibir_pagina_streamlit()
+
+# Chama a função principal se o arquivo for executado diretamente
+if __name__ == "__main__":
+    main()
