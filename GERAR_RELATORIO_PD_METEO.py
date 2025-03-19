@@ -48,15 +48,7 @@ def exibir_pagina_streamlit():
 
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
-        if pasta_saida:
-            # Verifica se o diretório existe, se não, cria o diretório
-            try:
-                os.makedirs(pasta_saida, exist_ok=True)  # Cria o diretório se não existir
-                st.success(f"Pasta criada em: {pasta_saida}")
-            except Exception as e:
-                st.error(f"Erro ao criar a pasta: {e}")
-                return
-
+        
             # Exibir a barra de progresso
             progress_bar = st.progress(0)
             progress_text = st.empty()
