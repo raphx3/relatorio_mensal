@@ -106,7 +106,7 @@ def exibir_pagina_streamlit():
                 
              
                 
-               zip_buffer =  plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
+                zip_buffer =  plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
             
                 # Terceira etapa: Gerando o relatório (75% - 100%)
                 progress_text.text("Gerando o relatório...")
