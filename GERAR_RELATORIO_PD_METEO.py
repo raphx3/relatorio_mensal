@@ -120,7 +120,7 @@ def exibir_pagina_streamlit():
                 
              
                 
-                plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste, os.path.join(pasta_saida, parametro_para_teste))
+                plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
             
                 # Terceira etapa: Gerando o relatório (75% - 100%)
                 progress_text.text("Gerando o relatório...")
