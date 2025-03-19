@@ -47,15 +47,19 @@ def exibir_pagina_streamlit():
     )
 
     try:
-        cwd = os.getcwd ()
-        cwd = os.path.join (cwd)
-        st.write (f"Antigo diretório base: {cwd}")
-        os.chdir (pasta_saida)
-        cwd = os.getcwd ()
-        st.write (f"Novo diretório base: {cwd}")
+        # Verifique o diretório atual
+        cwd = os.getcwd()
+        st.write(f"Antigo diretório base: {cwd}")
+        
+        # Tente mudar para o diretório fornecido
+        os.chdir(pasta_saida)
+        
+        # Verifique o novo diretório
+        cwd = os.getcwd()
+        st.write(f"Novo diretório base: {cwd}")
     
-    except:
-       st.error(f"Erro ao trocar para diretório do computador: {pasta_saida}") 
+    except Exception as e:
+        st.error(f"Erro ao trocar para diretório do computador: {e}")
 
     # Botão para gerar os resultados e salvar na pasta
     if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
