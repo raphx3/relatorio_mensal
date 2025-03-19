@@ -116,7 +116,7 @@ def exibir_pagina_streamlit():
                 progress_text.text("Processo finalizado.")
                 
                 # Finalizando o processo
-                st.success(f"Relatório gerado com sucesso em para {parametro_para_teste}")
+                st.success(f"Resultados para {parametro_para_teste} gerados com sucesso! gerado com sucesso em para")
             
             except Exception as e:
                 st.error(f"Erro ao gerar os resultados: {e}")
@@ -525,7 +525,7 @@ def plot_series_temporais (df_filtrado, parameter_columns, parametro_para_teste)
     st.download_button(
         label="Baixar todos os gráficos",
         data=zip_buffer,
-        file_name="graficos_temporais.zip",
+        file_name=f"resultados_{parametro_para_teste}.zip",
         mime="application/zip"
     )
 
