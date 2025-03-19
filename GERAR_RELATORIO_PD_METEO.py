@@ -247,39 +247,27 @@ func_names = [
 
 
 
-#%% plot_series_temporais
-def plot_series_temporais (df_filtrado, parameter_columns, parametro_para_teste, pasta_saida):  
-    
+def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste, pasta_saida):  
     agora = dtt.datetime.now()
-    agora = agora.strftime ('%Y/%m/%d %H:%M:%S')
-    
+    agora = agora.strftime('%Y/%m/%d %H:%M:%S')
     
     # Encontrar as colunas que possuem "Amplitude" no nome (excluindo "Flag_")
     amplitude_cols = [col for col in df_filtrado.columns if "Amplitude" in col and "Flag_" not in col  and "GMT-03:00" not in col]
     speed_cols = [col for col in df_filtrado.columns if "Speed" in col and "Flag_" not in col  and "GMT-03:00" not in col]
     
     # Garantir que as colunas de "Amplitude" sejam numéricas, descartando valores não numéricos
-    df_amplitude = df_filtrado[amplitude_cols].apply(pd.to_numeric, errors='coerce')  # Convertendo para numérico, erros serão NaN
-    df_speed = df_filtrado[speed_cols].apply(pd.to_numeric, errors='coerce')  # Convertendo para numérico, erros serão NaN
-    
-    # Calcular os limites globais do eixo Y com base nas colunas "Amplitude"
-    
+    df_amplitude = df_filtrado[amplitude_cols].apply(pd.to_numeric, errors='coerce')
+    df_speed = df_filtrado[speed_cols].apply(pd.to_numeric, errors='coerce')
     
     if not df_amplitude.empty:
-        ymin_amplitude = df_amplitude.min().min()*0.7  # Mínimo de todas as colunas "Amplitude"
-        ymax_amplitude = df_amplitude.max().max()*1.3  # Máximo de todas as colunas "Amplitude"
+        ymin_amplitude = df_amplitude.min().min() * 0.7
+        ymax_amplitude = df_amplitude.max().max() * 1.3
     
     if not df_speed.empty:
-        ymin_speed = df_speed.max().max()*-0.1  # Mínimo de todas as colunas "Amplitude"
-        ymax_speed = df_speed.max().max()*1.1  # Máximo de todas as colunas "Amplitude"
+        ymin_speed = df_speed.max().max() * -0.1
+        ymax_speed = df_speed.max().max() * 1.1
     
     for param in parameter_columns:
-        
-        #df[param] = df[param].fillna(df[param].mean())
-
-        #if 'GMT-03:00' not in param:
-            #flag_column = f'Flag_{param}'
-        
         flag_column = f'Flag_{param}'    
         
         if flag_column in df_filtrado.columns:
@@ -287,238 +275,55 @@ def plot_series_temporais (df_filtrado, parameter_columns, parametro_para_teste,
             plt.gca().set_facecolor('white')
 
             # Separar os dados por flag
-            df_preenchido = df_filtrado.copy ()
+            df_preenchido = df_filtrado.copy()
             df_preenchido = df_preenchido.fillna(df_preenchido.mean())
             df_flag_0 = df_preenchido[df_preenchido[flag_column] != 4]
             df_flag_4 = df_preenchido[df_preenchido[flag_column] == 4]
             
             df_nan = df_filtrado[df_filtrado[param].isna()]
             df_nan = df_nan.fillna(df_filtrado.mean())
-            
-            
-            
-            # Contagem de dados por flags
+
             count_flag_0 = len(df_flag_0)
             count_flag_4 = len(df_flag_4)
             porcentagem_flag_0 = round((count_flag_0 / len(df_filtrado)) * 100, 2)
             porcentagem_flag_4 = round((count_flag_4 / len(df_filtrado)) * 100, 2)
             
-            # Plotar a linha da série temporal para todos os dados
-            
-            # Criando dados suavizados
-            #df_param_suavizado = df_filtrado.copy()              
-            #numerical_columns = df_param_suavizado.select_dtypes(include=[np.number]).columns         
-            #df_param_suavizado[numerical_columns] = df_param_suavizado[numerical_columns].rolling(window=10).mean()         
-            #df_param_suavizado[numerical_columns] = df_param_suavizado[numerical_columns].fillna(df_param_suavizado[numerical_columns].mean()) 
-            #df_param_suavizado[numerical_columns] = df_param_suavizado[numerical_columns].ffill()
-            #df_param_suavizado[numerical_columns] = df_param_suavizado[numerical_columns].shift(-5)
-                        
-            # Plotar série completa
             plt.plot(df_filtrado['GMT-03:00'], df_filtrado[param], label=f'Série Completa: Flag 0 ({porcentagem_flag_0}%)', alpha=0.7, color='black', linestyle='-', linewidth=1, zorder=1)
-
-            # Plotar média móvel
-            #plt.plot(df_filtrado['GMT-03:00'], df_param_suavizado[param], label='Média móvel', alpha=0.8, color='black', linestyle='-', linewidth=1, zorder=2)
-
-            # Plotar os dados com Flag 4 (vermelho) como pontos
             plt.scatter(df_flag_4['GMT-03:00'], df_flag_4[param], color='red', alpha=1, s=15, label=f'Flag 4 ({porcentagem_flag_4}%)', zorder=2)
-            
-            # Plotar os nan como a média da série temporal
             plt.plot(df_nan['GMT-03:00'], df_nan[param], alpha=0.8, color='black', linestyle='dotted', linewidth=1, label = 'Valores nulos', zorder=3)
 
-            # Configurações do gráfico
             data_inicio = str(df_filtrado['GMT-03:00'].iloc[0])
             data_fim = str(df_filtrado['GMT-03:00'].iloc[-1])
             
-           
             plt.title(f'Série Temporal: {parametro_para_teste} - {param} - execução do reporte: {agora}\nPeríodo de análise: {data_inicio} - {data_fim}')
             plt.xlabel('Tempo (Data/Hora)')
             
-            # Para correntes
-            if "Amplitude" in param:
-                plt.ylabel('Amplitude (m)')
-            
-            if "Speed" in param:
-                plt.ylabel('Velocidade (m/s)')
-            
-            if "Direction" in param:
-                plt.ylabel('Direção (°)')
-            
-            if "Roll" in param:
-                plt.ylabel('Direção (°)')
-            
-            if "Heading" in param:
-                plt.ylabel('Direção (°)')
-                
-            if "Pitch" in param:
-                plt.ylabel('Direção (°)')
-                
-            if "Temperature" in param:
-                plt.ylabel('Temperatura (°C)')
-                
-            if "Pressure" in param:
-                plt.ylabel('Pressão (dbar)')
-                
-            if "Battery" in param:
-                plt.ylabel('Tensão (Volts)')
-            
-            # Para meteorologia
-            if "Pressure(hPa)" in param:
-                plt.ylabel('Pressão (dbar)')
-                
-            if "Rain" in param:
-                plt.ylabel('Altura (mm)')
-                                     
-            if "Wind Direction(*)" in param:
-                plt.ylabel('Direção (°)')
-                    
-            if "Gust Speed(m/s)" in param:
-                plt.ylabel('Velocidade (m/s)')       
-             
-            if "Wind Speed(m/s)" in param:
-                plt.ylabel('Velocidade (m/s)')       
-                
-            if "Dew Point" in param:
-                plt.ylabel('Temperatura (°C)')  
-                    
-            if "RH(%)" in param:
-                plt.ylabel('Umidade (%)')  
-                        
-            if "Temperature(*C)" in param:
-                plt.ylabel('Temperatura (°C)')  
-                
-            # Para mare
-            if "Hm0" in param:
-                plt.ylabel('Altura (m)')
-                
-            # Para ondas
-            if "Hmax" in param:
-                plt.ylabel('Altura (m)')
-                
-            if "Hm0_sea" in param:
-                plt.ylabel('Altura (m)')
-                                     
-            if "Hm0_swell" in param:
-                plt.ylabel('Altura (m)')
-                    
-            if "Tm02" in param:
-                plt.ylabel('Período (s)')       
-             
-            if "Tp" in param:
-                plt.ylabel('Período (s)')       
-                
-            if "Tp_sea" in param:
-                plt.ylabel('Período (s)')  
-                    
-            if "Tp_swell" in param:
-                plt.ylabel('Período (s)')  
-                        
-            if "DirTp" in param:
-                plt.ylabel('Direção (°)')  
-                
-            if "DirTp_sea" in param:
-                plt.ylabel('Direção (°)') 
-                
-            if "DirTp_swell" in param:
-                plt.ylabel('Direção (°)') 
-                
-            if "Main Direction" in param:
-                plt.ylabel('Direção (°)') 
-                
-            if "Main Direction_sea" in param:
-                plt.ylabel('Direção (°)')
-                
-            if "Main Direction_swell" in param:
-                plt.ylabel('Direção (°)') 
-                
-            if "Mean pressure" in param:
-                plt.ylabel('Pressão (dbar)') 
-                
-            if "Battery" in param:
-                plt.ylabel('Tensão (Volts)') 
-
-            if "Heading" in param:
-                plt.ylabel('Direção (°)') 
-                
-            if "Pitch" in param:
-                plt.ylabel('Direção (°)') 
-                
-            if "Roll" in param:
-                plt.ylabel('Direção (°)') 
-                
-            if "Pressure(dbar)" in param:
-                plt.ylabel('Pressão (dbar)') 
-
-            if "Temperature(C)" in param:
-                plt.ylabel('Temperatura (°C)')            
-         
-            
-            # Para ondas não direcionais
-            if "Tide_Level" in param:
-                plt.ylabel('Altura (m)')
-                
-            if "Sensor_Velki" in param:
-                plt.ylabel('Altura (m)')
-                                     
-            if "CutOff_Freq_High" in param:
-                plt.ylabel('Frequência (n/s)')
-                    
-            if "Peak_Period" in param:
-                plt.ylabel('Período (s)')       
-             
-            if "Mean_Period" in param:
-                plt.ylabel('Período (s)')       
-                
-            if "Max_Height" in param:
-                plt.ylabel('Altura (m)')  
-                    
-            if "Sign_Height" in param:
-                plt.ylabel('Altura (m)')                           
-    
-
-
-            # Garantir que o eixo X tenha sempre 5 ticks
-            # Converter as datas para números (timestamp em segundos)
-            time_min = df_filtrado['GMT-03:00'].min()
-            time_max = df_filtrado['GMT-03:00'].max()
-            time_min_timestamp = time_min.timestamp()  # Convertendo para timestamp (segundos desde 1970)
-            time_max_timestamp = time_max.timestamp()
-
-            # Gerar 5 valores igualmente espaçados no intervalo de tempo
-            xticks_positions_timestamp = np.linspace(time_min_timestamp, time_max_timestamp, 5)
-            xticks_positions = [pd.to_datetime(ts, unit='s') for ts in xticks_positions_timestamp]
-            plt.xticks(xticks_positions, rotation=0)
-
-            # Definir os limites do eixo Y
+            # Ajustar o eixo Y
             if param in amplitude_cols:
-                # Se a coluna for uma "Amplitude", usamos os limites globais calculados
                 plt.ylim(ymin_amplitude, ymax_amplitude)
-                plt.yticks(np.linspace(ymin_amplitude, ymax_amplitude, 6))  # Garantir 5 ticks
-                plt.xticks ()
-            
-            if param in speed_cols:
-                # Se a coluna for uma "Amplitude", usamos os limites globais calculados
+            elif param in speed_cols:
                 plt.ylim(ymin_speed, ymax_speed)
-                plt.yticks(np.linspace(ymin_speed, ymax_speed, 6))  # Garantir 5 ticks
-                plt.xticks ()
-            #else:
-                # Caso contrário, o limite Y pode ser ajustado automaticamente
-                #plt.tight_layout()
-
-            # Configurações adicionais
+            
             plt.legend(loc='upper right')
             plt.grid(True, linestyle='dotted', alpha=0.5)
-            
-            # Criar o diretório, se necessário
-            os.makedirs(pasta_saida, exist_ok=True)
 
-            
-            # Remover caracteres especiais do nome da coluna
+            # Criar o gráfico em um objeto de memória
+            img_bytes = io.BytesIO()
+            plt.savefig(img_bytes, format='png')
+            img_bytes.seek(0)  # Resetar o ponteiro do arquivo para o início
+
+            # Criar um nome de arquivo seguro
             safe_param_name = param.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '')
             safe_initial_date_name = data_inicio.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
             safe_final_date_name = data_fim.replace(' ', '_').replace('(', '').replace(')', '').replace('#', '').replace('/', '_').replace('\\', '_').replace('*', '').replace(':', '')
 
-            # Salvar a figura com o nome da coluna ajustado
-            plt.savefig(os.path.join(pasta_saida, f'{parametro_para_teste} - Flag_{safe_param_name} - {safe_initial_date_name} - {safe_final_date_name}.png'))
+            # Usar o Streamlit para criar o botão de download
+            st.download_button(
+                label=f'Download do Gráfico {param}',
+                data=img_bytes,
+                file_name=f'{parametro_para_teste} - Flag_{safe_param_name} - {safe_initial_date_name} - {safe_final_date_name}.png',
+                mime="image/png"
+            )
             plt.close()
             
     print("\nREPORTE EM GRÁFICOS FINALIZADO.")
