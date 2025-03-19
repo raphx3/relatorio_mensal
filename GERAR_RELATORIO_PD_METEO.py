@@ -1,10 +1,17 @@
-import io
-import matplotlib.pyplot as plt
+# %% Módulos
+import os
 import pandas as pd
+import matplotlib.pyplot as plt
 import numpy as np
-import streamlit as st
 import datetime as dtt
+import streamlit as st
+import time
+import io
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from QC_FLAGS_UMISAN import *
+from OPERACIONAL_UMI_SIMPLIFICADO import *
+
+# %% FUNÇÕES DE GERAÇÃO DE GRÁFICOS
 
 def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste):
     agora = dtt.datetime.now()
@@ -70,34 +77,85 @@ def plot_series_temporais(df_filtrado, parameter_columns, parametro_para_teste):
 
     return buf
 
-# Função principal para exibir o Streamlit
-def main():
-    st.title('Visualização de Séries Temporais')
+# %% FUNÇÃO PRINCIPAL STREAMLIT
+
+def exibir_pagina_streamlit():
+    st.title('Relatório mensal')
     
-    # Carregar os dados (df_filtrado, parameter_columns, etc.)
-    # Aqui você deve ter o dataframe e os parâmetros configurados, vou usar um exemplo genérico para esse caso:
+    # Campos para o usuário inserir informações de configuração de teste
+    analista = st.text_input('Nome do Analista:', 'Raphael')  # Nome do analista
+    projeto = st.text_input('Nome do Projeto:', 'PD_METEO')  # Nome do projeto
+    boia = st.text_input('Nome da Boia:', 'Protótipo 1')  # Nome da boia
     
-    # Exemplo de dados (substitua com os seus dados reais)
-    df_filtrado_por_tempo = pd.DataFrame({
-        'GMT-03:00': pd.date_range(start='2023-01-01', periods=100, freq='D'),
-        'Amplitude_S1': np.random.rand(100) * 10,
-        'Speed_S1': np.random.rand(100) * 20,
-        'Flag_Amplitude_S1': np.random.choice([0, 4], size=100),
-        'Flag_Speed_S1': np.random.choice([0, 4], size=100),
-    })
-    parameter_columns = ['Amplitude_S1', 'Speed_S1']  # Exemplos de colunas
-    parametro_para_teste = 'ExemploTeste'  # Nome do parâmetro de teste
-    
-    # Gerar o gráfico em memória
-    buf = plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
-    
-    # Exibir o botão de download
-    st.download_button(
-        label="Baixar Gráfico",
-        data=buf,
-        file_name="grafico_serie_temporal.png",
-        mime="image/png"
+    # Seleção do parâmetro para teste
+    parametro_para_teste = st.selectbox(
+        'Selecione o parâmetro para teste:',
+        ['CORRENTES', 'METEOROLOGIA', 'MARE', 'ONDAS', 'ONDAS_NAO_DIRECIONAIS']
     )
 
+    # Usando st.columns() para criar colunas lado a lado
+    col1, col2 = st.columns(2)  # Cria duas colunas
+
+    # Campo para o usuário inserir as datas de início e fim lado a lado
+    with col1:
+        data_inicio = st.date_input('Data de início:', pd.to_datetime('2024-01-01'))
+    
+    with col2:
+        data_fim = st.date_input('Data de fim:', pd.to_datetime('2025-12-31'))
+
+    # Campos de seleção de parâmetros
+    if parametro_para_teste == 'CORRENTES':
+        parameter_columns = parameter_columns_correntes
+    elif parametro_para_teste == 'METEOROLOGIA':
+        parameter_columns = parameter_columns_meteo
+    elif parametro_para_teste == 'MARE':
+        parameter_columns = parameter_columns_mare
+    elif parametro_para_teste == 'ONDAS':
+        parameter_columns = parameter_columns_ondas
+    elif parametro_para_teste == 'ONDAS_NAO_DIRECIONAIS':
+        parameter_columns = parameter_columns_ondas_nao_direcionais
+    
+    # Botão para gerar os resultados e salvar na pasta
+    if st.button(label='Gerar Resultados para Relatório na Pasta Selecionada'):
+        try:
+            # Exemplo de dados (substitua com os seus dados reais)
+            df_filtrado_por_tempo = pd.DataFrame({
+                'GMT-03:00': pd.date_range(start='2023-01-01', periods=100, freq='D'),
+                'Amplitude_S1': np.random.rand(100) * 10,
+                'Speed_S1': np.random.rand(100) * 20,
+                'Flag_Amplitude_S1': np.random.choice([0, 4], size=100),
+                'Flag_Speed_S1': np.random.choice([0, 4], size=100),
+            })
+            
+            # Filtrando dados por período
+            df_filtrado_por_tempo, inicio, fim = filtrar_por_periodo(df_filtrado_por_tempo, data_inicio, data_fim)
+            
+            # Gerar o gráfico na memória
+            buf = plot_series_temporais(df_filtrado_por_tempo, parameter_columns, parametro_para_teste)
+            
+            # Exibir o botão de download
+            st.download_button(
+                label="Baixar Gráfico",
+                data=buf,
+                file_name="grafico_serie_temporal.png",
+                mime="image/png"
+            )
+            st.success("Relatório gerado com sucesso!")
+        
+        except Exception as e:
+            st.error(f"Erro ao gerar os resultados: {e}")
+
+# %% FILTRO DE PERÍODO
+
+def filtrar_por_periodo(df, data_inicio, data_fim):
+    # Filtro
+    data_inicio = pd.to_datetime(data_inicio)
+    data_fim = pd.to_datetime(data_fim)
+    df_filtrado_por_tempo = df[(df['GMT-03:00'] >= data_inicio) & (df['GMT-03:00'] <= data_fim)]
+    
+    return df_filtrado_por_tempo, data_inicio.strftime("%Y-%m-%d %H:%M:%S"), data_fim.strftime("%Y-%m-%d %H:%M:%S")
+
+# %% EXECUÇÃO DO STREAMLIT
+
 if __name__ == "__main__":
-    main()
+    exibir_pagina_streamlit()
